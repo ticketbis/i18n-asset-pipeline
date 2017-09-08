@@ -87,11 +87,11 @@ class I18nProcessor extends AbstractProcessor {
     @Override
     @CompileStatic
     String process(String inputText, AssetFile assetFile) {
-        AssetFile f = (AssetFile) assetFile
-        Matcher m = f.name =~ /._(\w+)\.i18n$/
+        Matcher m = assetFile.name =~ /._(\w+)\.i18n$/
         StringBuilder buf = new StringBuilder('grails-app/i18n/messages')
         if (m) buf << '_' << m.group(1)
-        Properties props = loadMessages(buf.toString())
+        String encoding = assetFile.encoding ?: 'UTF-8'
+        Properties props = loadMessages(buf.toString(), encoding)
 
         // At this point, inputText has been pre-processed (I18nPreprocessor).
         Map<String, String> messages = [: ]
@@ -145,15 +145,16 @@ class I18nProcessor extends AbstractProcessor {
      * Loads the message resources from the given file.
      *
      * @param fileName                  the given base file name
+     * @param encoding                  the charset encoding of the file content
      * @return                          the read message resources
      * @throws FileNotFoundException    if no resource with the required
      *                                  localized messages exists
      */
     @CompileStatic
-    protected Properties loadMessages(String fileName) {
+    protected Properties loadMessages(String fileName, String encoding) {
         Resource res = locateResource(fileName)
         Properties props = new Properties()
-        props.load res.inputStream
+        props.load(new InputStreamReader(res.inputStream, encoding))
 
         props
     }
